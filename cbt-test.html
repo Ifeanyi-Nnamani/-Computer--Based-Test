@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Digital Literacy Computer Based Test (50 Qs)</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --correct:#0ea5a4; --wrong:#ef4444;
+    --white:#e6eef6;
+  }
+  body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; margin:0;background:linear-gradient(180deg,#071224 0%, #081827 100%); color:var(--white); min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:28px;}
+  .container{width:100%; max-width:980px;}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:18px; box-shadow:0 8px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.04);}
+  header{display:flex; gap:12px; align-items:center; margin-bottom:14px;}
+  header h1{font-size:20px; margin:0;}
+  .meta{margin-left:auto; display:flex; gap:8px; align-items:center;}
+  .meta .pill{background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; font-size:13px; color:var(--muted);}
+  .question-area{display:flex; gap:18px;}
+  .q-panel{flex:1;}
+  .sidebar{width:220px; flex-shrink:0;}
+  .question-box{background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; margin-bottom:12px;}
+  .qtext{font-size:16px; margin-bottom:10px; color:var(--white);}
+  .options{display:flex; flex-direction:column; gap:8px;}
+  .option{background:rgba(255,255,255,0.02); padding:10px 12px; border-radius:8px; cursor:pointer; display:flex; gap:10px; align-items:center; border:1px solid transparent;}
+  .option input{accent-color:var(--accent);}
+  .option:hover{border-color:rgba(6,182,212,0.12);}
+  .controls{display:flex; gap:10px; align-items:center; margin-top:10px;}
+  .btn{background:var(--accent); color:#042029; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;}
+  .btn.ghost{background:transparent; color:var(--white); border:1px solid rgba(255,255,255,0.06);}
+  .btn.danger{background:var(--wrong); color:white;}
+  .progress{background:rgba(255,255,255,0.03); height:12px; border-radius:999px; overflow:hidden;}
+  .progress > i{display:block; height:100%; background:linear-gradient(90deg,var(--accent),#7c3aed);}
+  .sidebar .panel{background:rgba(255,255,255,0.02); padding:12px; border-radius:8px; margin-bottom:12px;}
+  .qnav{display:grid; grid-template-columns:repeat(5,1fr); gap:6px;}
+  .qnav button{padding:8px; border-radius:6px; border:none; cursor:pointer; background:rgba(255,255,255,0.02); color:var(--muted);}
+  .qnav button.answered{background:linear-gradient(90deg, rgba(6,182,212,0.12), rgba(124,58,237,0.08)); color:var(--white) ; border:1px solid rgba(255,255,255,0.04);}
+  .qnav button.current{outline:2px solid rgba(6,182,212,0.12);}
+  .result{padding:14px; border-radius:8px; margin-top:12px;}
+  .result .score{font-size:26px; font-weight:700; color:var(--accent);}
+  .review .item{padding:10px; border-radius:8px; margin-bottom:8px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02);}
+  .correct{border-left:6px solid var(--correct);}
+  .incorrect{border-left:6px solid var(--wrong);}
+  footer{display:flex; justify-content:space-between; gap:8px; margin-top:12px; align-items:center;}
+  .small{font-size:13px;color:var(--muted);}
+  .export{background:transparent; color:var(--muted); border:1px dashed rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer;}
+  @media (max-width:880px){
+    .question-area{flex-direction:column;}
+    .sidebar{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card" role="application" aria-label="Digital literacy CBT">
+    <header>
+      <div>
+        <h1>Digital Literacy CBT — Microsoft Word, PowerPoint & Excel (50 questions)</h1>
+        <div class="small" style="margin-top:6px">Multiple choice — select one option per question. Navigate with Next / Previous. Submit when done.</div>
+      </div>
+      <div class="meta" aria-hidden="false">
+        <div class="pill" id="progressText">Question 1 / 50</div>
+        <div class="pill">Time: <span id="timer">00:00</span></div>
+      </div>
+    </header>
+
+    <div class="question-area">
+      <div class="q-panel">
+        <div class="question-box" id="questionBox" aria-live="polite">
+          <div class="qtext" id="qtext">Loading…</div>
+          <div class="options" id="options"></div>
+          <div class="controls">
+            <button class="btn ghost" id="prevBtn">Previous</button>
+            <button class="btn" id="nextBtn">Next</button>
+            <button class="btn danger" id="submitBtn">Submit Test</button>
+            <div style="margin-left:auto" class="small">Answered: <span id="answeredCount">0</span>/50</div>
+          </div>
+        </div>
+
+        <div id="resultArea" style="display:none" class="result">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div>
+              <div class="score" id="scoreText"></div>
+              <div class="small" id="detailText"></div>
+            </div>
+            <div style="margin-left:auto">
+              <button class="btn ghost" id="reviewBtn">Review Answers</button>
+              <button class="btn" id="restartBtn">Restart (shuffle)</button>
+            </div>
+          </div>
+
+          <div id="reviewArea" style="margin-top:12px; display:none" class="review"></div>
+        </div>
+
+      </div>
+
+      <aside class="sidebar" aria-label="Sidebar">
+        <div class="panel">
+          <div class="small" style="margin-bottom:8px">Progress</div>
+          <div class="progress" aria-hidden="true" title="Progress">
+            <i id="progressBar" style="width:0%"></i>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn" id="showAllBtn">Show All</button>
+            <button class="btn ghost" id="clearBtn">Clear Answers</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="small" style="margin-bottom:8px">Quick Navigation</div>
+          <div class="qnav" id="qnav"></div>
+        </div>
+
+        <div class="panel">
+          <div class="small" style="margin-bottom:8px">Export / Print</div>
+          <button class="export" id="exportBtn">Export results (.csv)</button>
+          <button class="export" id="printBtn" style="margin-top:8px">Print review</button>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div class="small">Tip: use keyboard ← → to navigate. Your progress is local to this browser tab.</div>
+      <div class="small">Created by: Ifeanyi Nnamani for Enugu Job Center Enugu (SME)</div>
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ====== QUESTIONS DATA (50 questions) ======
+   Each object: { id, q, choices:[], answer: index (0-based), topic(optional) }
+   Source: prepared digital literacy test: General, Word, PowerPoint, Excel
+*/
+const QUESTIONS = [
+  {id:1, q:"Which of these is an input device?", choices:["Speaker","Printer","Keyboard","Monitor"], answer:2, topic:"General"},
+  {id:2, q:"The brain of the computer is the _____.", choices:["RAM","CPU","ROM","Hard Disk"], answer:1, topic:"General"},
+  {id:3, q:"Which device stores long-term data?", choices:["RAM","Hard drive","Keyboard","Monitor"], answer:1, topic:"General"},
+  {id:4, q:"The full meaning of ICT is _____.", choices:["Internet Communication Terms","Information and Computer Technology","Information and Communication Technology","Inter-Computer Transfer"], answer:2, topic:"General"},
+  {id:5, q:"Which is a web browser?", choices:["Google Chrome","Microsoft Word","Adobe Reader","File Explorer"], answer:0, topic:"General"},
+  {id:6, q:"A strong password should include _____.", choices:["Only numbers","Only letters","Letters, numbers & symbols","Only lowercase letters"], answer:2, topic:"General"},
+  {id:7, q:"A computer virus is a type of _____.", choices:["Hardware","Malware","Utility software","Browser"], answer:1, topic:"General"},
+  {id:8, q:"The temporary computer memory is called _____.", choices:["SSD","ROM","RAM","Flash"], answer:2, topic:"General"},
+  {id:9, q:"Shortcut for 'Copy' is _____.", choices:["Ctrl + V","Ctrl + X","Ctrl + C","Ctrl + A"], answer:2, topic:"General"},
+  {id:10, q:"Internet is a type of _____.", choices:["LAN","MAN","WAN","PAN"], answer:2, topic:"General"},
+  {id:11, q:"Cloud storage example is _____.", choices:["USB","DVD","OneDrive","SD Card"], answer:2, topic:"General"},
+  {id:12, q:"A group of connected computers is called a _____.", choices:["Folder","Network","Driver","File"], answer:1, topic:"General"},
+  {id:13, q:"The smallest unit of data is _____.", choices:["Byte","Bit","Word","Pixel"], answer:1, topic:"General"},
+  {id:14, q:"Which port is commonly used for printers?", choices:["HDMI","USB","VGA","Audio"], answer:1, topic:"General"},
+  {id:15, q:"Software used to protect your computer is _____.", choices:["Firewall","Disk Cleanup","Calculator","Screensaver"], answer:0, topic:"General"},
+
+  {id:16, q:"Microsoft Word is used for _____.", choices:["Calculations","Presentations","Word processing","Internet browsing"], answer:2, topic:"Word"},
+  {id:17, q:"Default Word document extension is _____.", choices:[".doc",".pptx",".docx",".xlsx"], answer:2, topic:"Word"},
+  {id:18, q:"Shortcut for Bold text is _____.", choices:["Ctrl + U","Ctrl + B","Ctrl + I","Ctrl + E"], answer:1, topic:"Word"},
+  {id:19, q:"Red wavy underline indicates _____.", choices:["Grammar error","Spelling error","Formatting error","Page error"], answer:1, topic:"Word"},
+  {id:20, q:"Text alignment options can be found under the ____ tab.", choices:["Insert","Review","Home","View"], answer:2, topic:"Word"},
+  {id:21, q:"To insert a table, click _____.", choices:["Home → Table","Insert → Table","Layout → Insert","File → Table"], answer:1, topic:"Word"},
+  {id:22, q:"The feature to merge letters with data is _____.", choices:["Mail Merge","Format Painter","SmartArt","Track Changes"], answer:0, topic:"Word"},
+  {id:23, q:"Track Changes is used for _____.", choices:["Animations","Reviewing edits","Printing","Page numbering"], answer:1, topic:"Word"},
+  {id:24, q:"To insert page numbers, go to _____.", choices:["Review","Home","Insert","Layout"], answer:2, topic:"Word"},
+  {id:25, q:"The area at the top of the page is the _____.", choices:["Footer","Header","Title bar","Status bar"], answer:1, topic:"Word"},
+  {id:26, q:"Format Painter is used to _____.", choices:["Paint shapes","Copy formatting","Print documents","Add animations"], answer:1, topic:"Word"},
+  {id:27, q:"The best view for printing is _____.", choices:["Outline View","Print Layout","Draft View","Web Layout"], answer:1, topic:"Word"},
+  {id:28, q:"Shortcut for Underline is _____.", choices:["Ctrl + U","Ctrl + Q","Ctrl + E","Ctrl + W"], answer:0, topic:"Word"},
+  {id:29, q:"The default font in newer Word versions is _____.", choices:["Times New Roman","Arial","Calibri","Cambria"], answer:2, topic:"Word"},
+  {id:30, q:"To add a picture, go to _____.", choices:["Insert → Pictures","Layout → Picture","Home → Insert Picture","View → Picture"], answer:0, topic:"Word"},
+
+  {id:31, q:"PowerPoint is used for _____.", choices:["Spreadsheets","Presentations","Word processing","Antivirus"], answer:1, topic:"PowerPoint"},
+  {id:32, q:"PowerPoint files use the extension _____.", choices:[".ppt",".pptx",".docx",".xls"], answer:1, topic:"PowerPoint"},
+  {id:33, q:"The first slide in a presentation is usually the _____.", choices:["Title slide","Chart slide","Notes slide","Ending slide"], answer:0, topic:"PowerPoint"},
+  {id:34, q:"Slide transitions apply to _____.", choices:["Objects","Between slides","Text only","Images only"], answer:1, topic:"PowerPoint"},
+  {id:35, q:"Animations are applied to _____.", choices:["Entire slide","Text and objects","Background only","Footer"], answer:1, topic:"PowerPoint"},
+  {id:36, q:"Shortcut to start a slide show is _____.", choices:["F5","F3","Ctrl + P","Shift + F7"], answer:0, topic:"PowerPoint"},
+  {id:37, q:"To insert a new slide, go to _____.", choices:["Insert → New Slide","Home → New Slide","Layout → Slide","View → New Slide"], answer:1, topic:"PowerPoint"},
+  {id:38, q:"The view that shows miniature slides is _____.", choices:["Normal","Slide Sorter","Reading View","Presenter View"], answer:1, topic:"PowerPoint"},
+  {id:39, q:"Notes in PowerPoint are used for _____.", choices:["Audience","Presenter","Design","Animation"], answer:1, topic:"PowerPoint"},
+  {id:40, q:"To insert audio, click _____.", choices:["Insert → Audio","Design → Sound","Review → Audio","Slide Show → Insert"], answer:0, topic:"PowerPoint"},
+
+  {id:41, q:"Excel is mainly used for _____.", choices:["Word processing","Slide creation","Calculations and data analysis","Web design"], answer:2, topic:"Excel"},
+  {id:42, q:"A single cell in Excel is identified by _____.", choices:["Cell number","Cell address","Cell ID","Cell label"], answer:1, topic:"Excel"},
+  {id:43, q:"Excel files have the extension _____.", choices:[".xlsx",".pptx",".docx",".pdf"], answer:0, topic:"Excel"},
+  {id:44, q:"A group of cells is known as a _____.", choices:["Block","Range","Sheet","Row"], answer:1, topic:"Excel"},
+  {id:45, q:"A formula must begin with _____.", choices:["+","=" ,":","*"], answer:1, topic:"Excel"},
+  {id:46, q:"The function used to add numbers is _____.", choices:["=ADD()","=SUM()","=TOTAL()","=PLUS()"], answer:1, topic:"Excel"},
+  {id:47, q:"To calculate the average, use _____.", choices:["=AVG()","=MEAN()","=AVERAGE()","=MID()"], answer:2, topic:"Excel"},
+  {id:48, q:"Charts can be inserted from the ____ tab.", choices:["View","Insert","Review","Data"], answer:1, topic:"Excel"},
+  {id:49, q:"The Fill Handle is used for _____.", choices:["Copying formulas","Printing","Formatting text","Saving files"], answer:0, topic:"Excel"},
+  {id:50, q:"To freeze the top row, use _____.", choices:["Data → Freeze","View → Freeze Panes → Freeze Top Row","Home → Format → Freeze","Insert → Freeze"], answer:1, topic:"Excel"}
+];
+
+/* ====== APP STATE ====== */
+let state = {
+  questions: [],   // will hold the (possibly shuffled) questions
+  currentIndex: 0,
+  answers: {},     // key: question id -> selected index
+  startedAt: null,
+  timerInterval: null,
+  secondsElapsed: 0,
+  submitted: false
+};
+
+/* ====== UTILITIES ====== */
+function shuffleArray(a) {
+  // Fisher-Yates
+  for (let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function formatTime(s){
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `${mm}:${ss}`;
+}
+
+/* ====== INITIALIZATION ====== */
+function init(shuffle=true){
+  // Prepare questions copy
+  state.questions = QUESTIONS.map(q => ({...q}));
+  if (shuffle) shuffleArray(state.questions);
+  // reset answers
+  state.answers = {};
+  state.currentIndex = 0;
+  state.secondsElapsed = 0;
+  state.submitted = false;
+  state.startedAt = Date.now();
+  // build nav UI
+  buildQNav();
+  renderQuestion();
+  updateProgressUI();
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('reviewArea').style.display = 'none';
+  // timer
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.secondsElapsed++;
+    document.getElementById('timer').textContent = formatTime(state.secondsElapsed);
+  },1000);
+}
+
+/* ====== RENDER ====== */
+function renderQuestion(){
+  const qObj = state.questions[state.currentIndex];
+  const qtext = document.getElementById('qtext');
+  const opts = document.getElementById('options');
+  qtext.textContent = `${state.currentIndex+1}. ${qObj.q}`;
+  opts.innerHTML = '';
+  qObj.choices.forEach((choice, idx) => {
+    const id = `q${qObj.id}_opt${idx}`;
+    const wrapper = document.createElement('label');
+    wrapper.className = 'option';
+    wrapper.setAttribute('role','radio');
+    wrapper.setAttribute('aria-checked', (state.answers[qObj.id] === idx) ? 'true' : 'false');
+    wrapper.innerHTML = `
+      <input type="radio" name="q${qObj.id}" id="${id}" value="${idx}" ${state.answers[qObj.id]===idx ? 'checked' : ''} />
+      <div style="flex:1">
+        <div style="font-weight:600;color:var(--white)">${choice}</div>
+      </div>
+    `;
+    // click selects
+    wrapper.addEventListener('click', (e)=>{
+      const input = wrapper.querySelector('input');
+      input.checked = true;
+      selectAnswer(qObj.id, idx);
+    });
+    opts.appendChild(wrapper);
+  });
+
+  // manage prev/next disabled
+  document.getElementById('prevBtn').disabled = state.currentIndex===0;
+  document.getElementById('nextBtn').disabled = state.currentIndex === state.questions.length-1;
+
+  // highlight current nav button
+  document.querySelectorAll('#qnav button').forEach((btn, i) => {
+    btn.classList.toggle('current', i === state.currentIndex);
+    const qid = state.questions[i].id;
+    btn.classList.toggle('answered', typeof state.answers[qid] !== 'undefined');
+  });
+
+  // update progress text
+  document.getElementById('progressText').textContent = `Question ${state.currentIndex+1} / ${state.questions.length}`;
+  // answered count
+  document.getElementById('answeredCount').textContent = Object.keys(state.answers).length;
+  // progress bar
+  updateProgressUI();
+}
+
+/* ====== NAV & ANSWER HANDLING ====== */
+function selectAnswer(qid, selectedIdx){
+  state.answers[qid] = selectedIdx;
+  // update UI marks on nav
+  document.getElementById('answeredCount').textContent = Object.keys(state.answers).length;
+  document.querySelectorAll('#qnav button').forEach((btn, i) => {
+    const qidAt = state.questions[i].id;
+    btn.classList.toggle('answered', typeof state.answers[qidAt] !== 'undefined');
+  });
+  // mark aria-checked
+  document.querySelectorAll('.option').forEach(opt => {
+    opt.setAttribute('aria-checked','false');
+  });
+  // reflect current option (already set by input checked)
+}
+
+function buildQNav(){
+  const qnav = document.getElementById('qnav');
+  qnav.innerHTML = '';
+  state.questions.forEach((q, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = i+1;
+    btn.title = `Go to question ${i+1}`;
+    btn.addEventListener('click', ()=> {
+      state.currentIndex = i;
+      renderQuestion();
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+    qnav.appendChild(btn);
+  });
+}
+
+/* ====== PROGRESS UI ====== */
+function updateProgressUI(){
+  const pct = Math.round((Object.keys(state.answers).length / state.questions.length) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+/* ====== SUBMIT & GRADE ====== */
+function gradeTest(){
+  const total = state.questions.length;
+  let correct = 0;
+  const details = state.questions.map((qObj) => {
+    const given = (typeof state.answers[qObj.id] === 'number') ? state.answers[qObj.id] : null;
+    const isCorrect = (given === qObj.answer);
+    if (isCorrect) correct++;
+    return {
+      id: qObj.id,
+      q: qObj.q,
+      choices: qObj.choices,
+      correctIndex: qObj.answer,
+      givenIndex: given,
+      correct: isCorrect,
+      topic: qObj.topic || ''
+    };
+  });
+  return { total, correct, details, scorePercent: Math.round((correct/total)*100) };
+}
+
+function handleSubmit(){
+  if (state.submitted) return;
+  if (!confirm("Submit test now? You won't be able to change answers after submitting.")) return;
+  state.submitted = true;
+  clearInterval(state.timerInterval);
+  const result = gradeTest();
+  document.getElementById('resultArea').style.display = 'block';
+  document.getElementById('scoreText').textContent = `${result.correct} / ${result.total} (${result.scorePercent}%)`;
+  document.getElementById('detailText').textContent = `Time: ${formatTime(state.secondsElapsed)} • Questions answered: ${Object.keys(state.answers).length}`;
+  // show review button
+  document.getElementById('reviewBtn').style.display = 'inline-block';
+  // show review prepared but hidden
+  prepareReview(result.details);
+}
+
+/* ====== REVIEW ====== */
+function prepareReview(details){
+  const review = document.getElementById('reviewArea');
+  review.innerHTML = '';
+  details.forEach((d, idx) => {
+    const div = document.createElement('div');
+    div.className = 'item ' + (d.correct ? 'correct' : 'incorrect');
+    div.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="font-weight:700; min-width:36px">${idx+1}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;margin-bottom:6px">${d.q}</div>
+          ${d.choices.map((c, i) => {
+            const mark = (i===d.correctIndex) ? '✔' : ((i===d.givenIndex) ? '✖' : '');
+            const strong = (i===d.correctIndex) ? 'font-weight:700;' : '';
+            return `<div style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.01); margin-bottom:4px; ${strong}">${String.fromCharCode(65+i)}. ${c} ${mark ? '<span style="margin-left:8px;color:'+(i===d.correctIndex? 'var(--correct)':'var(--wrong)')+'">'+mark+'</span>' : ''}</div>`;
+          }).join('')}
+          <div class="small" style="margin-top:6px;color:var(--muted)">${d.correct ? 'Your answer was correct.' : `Correct answer: ${String.fromCharCode(65 + d.correctIndex)} — ${d.choices[d.correctIndex]}`}</div>
+        </div>
+      </div>
+    `;
+    review.appendChild(div);
+  });
+  // show review area
+  document.getElementById('reviewArea').style.display = 'block';
+  // reveal result panel
+  document.getElementById('resultArea').scrollIntoView({behavior:'smooth'});
+}
+
+/* ====== EXPORT CSV ====== */
+function exportCSV(){
+  if (!state.submitted) {
+    if (!confirm("You haven't submitted yet. Export current answers anyway?")) return;
+  }
+  const rows = [["Question No","Question","Selected Option (Letter)","Selected Option Text","Correct Option (Letter)","Correct Option Text","Correct?","Topic"]];
+  const grading = gradeTest();
+  grading.details.forEach((d, i)=>{
+    const selLetter = (d.givenIndex === null || d.givenIndex === undefined) ? '' : String.fromCharCode(65 + d.givenIndex);
+    const selText = (d.givenIndex === null || d.givenIndex === undefined) ? '' : d.choices[d.givenIndex];
+    const corLetter = String.fromCharCode(65 + d.correctIndex);
+    const corText = d.choices[d.correctIndex];
+    rows.push([i+1, d.q, selLetter, selText, corLetter, corText, d.correct ? 'Yes' : 'No', d.topic || '']);
+  });
+  const csvContent = rows.map(r => r.map(cell => `"${(cell+'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'digital_literacy_results.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ====== BIND EVENTS ====== */
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if (state.currentIndex < state.questions.length-1) {
+    state.currentIndex++;
+    renderQuestion();
+  }
+});
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  if (state.currentIndex > 0) {
+    state.currentIndex--;
+    renderQuestion();
+  }
+});
+document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+document.getElementById('showAllBtn').addEventListener('click', ()=>{
+  // show quick jump dialog - focus nav
+  document.getElementById('qnav').scrollIntoView({behavior:'smooth'});
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if (!confirm('Clear all selected answers?')) return;
+  state.answers = {};
+  renderQuestion();
+});
+document.getElementById('reviewBtn').addEventListener('click', ()=>{
+  const ra = document.getElementById('reviewArea');
+  ra.style.display = (ra.style.display === 'block') ? 'none' : 'block';
+});
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
+document.getElementById('printBtn').addEventListener('click', ()=>{
+  if (!state.submitted) {
+    alert('Please submit the test first to print the reviewed answers and results.');
+    return;
+  }
+  window.print();
+});
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  if (!confirm('Restart test and reshuffle questions?')) return;
+  init(true);
+});
+
+// keyboard navigation
+window.addEventListener('keydown', (e)=>{
+  if (e.key === 'ArrowRight') {
+    document.getElementById('nextBtn').click();
+  } else if (e.key === 'ArrowLeft') {
+    document.getElementById('prevBtn').click();
+  }
+});
+
+// attach change listener for options (delegated)
+document.getElementById('options').addEventListener('change', (e)=>{
+  const input = e.target;
+  if (input && input.name && input.name.startsWith('q')) {
+    const qid = parseInt(input.name.substring(1));
+    const val = parseInt(input.value);
+    selectAnswer(qid, val);
+    // update aria
+    document.querySelectorAll('.option').forEach(opt => opt.setAttribute('aria-checked','false'));
+    const checked = input.closest('label');
+    if (checked) checked.setAttribute('aria-checked','true');
+    updateProgressUI();
+    // mark nav answered
+    document.querySelectorAll('#qnav button').forEach((btn, i) => {
+      const qidAt = state.questions[i].id;
+      btn.classList.toggle('answered', typeof state.answers[qidAt] !== 'undefined');
+    });
+  }
+});
+
+/* When clicking nav buttons, we must map index to question; also allow clicking radio via labels
+   We also need to keep options' input change event in case user clicks the radio directly.
+*/
+function attachNavButtonsToInputs(){
+  // after render, attach inputs
+  document.querySelectorAll('.option input').forEach(input => {
+    input.addEventListener('change', (e)=>{
+      const name = input.name; // q<id>
+      const qid = parseInt(name.substring(1));
+      const val = parseInt(input.value);
+      selectAnswer(qid, val);
+      // update nav marks
+      document.querySelectorAll('#qnav button').forEach((btn, i) => {
+        const qidAt = state.questions[i].id;
+        btn.classList.toggle('answered', typeof state.answers[qidAt] !== 'undefined');
+      });
+    });
+  });
+}
+
+// monitor render to attach inputs
+const renderObserver = new MutationObserver(()=> attachNavButtonsToInputs());
+renderObserver.observe(document.getElementById('options'), {childList:true, subtree:true});
+
+/* ====== ON LOAD ====== */
+init(true); // shuffle by default
+
+</script>
+</body>
+</html>
